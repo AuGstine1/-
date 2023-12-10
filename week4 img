@@ -1,0 +1,82 @@
+PImage img;  // 图片对象
+int pixelSize = 10;  // 像素块的大小
+ArrayList<Pixel> pixels = new ArrayList<Pixel>();  // 像素数组
+
+void setup() {
+  size(800, 600);
+  img = loadImage("jett.jpg");  // 替换为你的图像文件路径
+
+  // 初始化像素数组
+  for (int x = 0; x < img.width; x += pixelSize) {
+    for (int y = 0; y < img.height; y += pixelSize) {
+      int col = getAverageColor(x, y, pixelSize);
+      pixels.add(new Pixel(x, y, col));
+    }
+  }
+}
+
+void draw() {
+  background(255);
+
+  // 更新和显示每个像素点
+  for (Pixel pixel : pixels) {
+    pixel.update();
+    pixel.display();
+  }
+}
+
+// 获取指定位置的像素块的平均颜色
+int getAverageColor(int startX, int startY, int size) {
+  float r = 0, g = 0, b = 0;
+  int count = 0;
+
+  // 遍历像素块内的所有像素
+  for (int x = startX; x < startX + size && x < img.width; x++) {
+    for (int y = startY; y < startY + size && y < img.height; y++) {
+      int pixelColor = img.get(x, y);
+      r += red(pixelColor);
+      g += green(pixelColor);
+      b += blue(pixelColor);
+      count++;
+    }
+  }
+
+  // 计算平均颜色
+  r /= count;
+  g /= count;
+  b /= count;
+
+  // 返回平均颜色
+  return color(r, g, b);
+}
+
+// 像素点类
+class Pixel {
+  float x, y;  // 像素位置
+  float targetX, targetY;  // 目标位置
+  int col;  // 像素颜色
+  float easing = 0.05;  // 缓动系数
+
+  Pixel(float x, float y, int col) {
+    this.x = random(width);  // 初始位置在画布外
+    this.y = random(height);  // 初始位置在画布外
+    this.targetX = x;
+    this.targetY = y;
+    this.col = col;
+  }
+
+  void update() {
+    // 使用缓动函数逐渐移动到目标位置
+    x = lerp(x, targetX, easing);
+    y = lerp(y, targetY, easing);
+  }
+
+  void display() {
+    // 将像素颜色作为填充颜色
+    fill(col);
+    noStroke();
+
+    // 在像素位置创建小矩形
+    rect(x, y, pixelSize, pixelSize);
+  }
+}
