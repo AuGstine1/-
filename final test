@@ -1,0 +1,161 @@
+import processing.sound.*;
+import java.io.File;
+
+SoundFile sf;
+AudioIn in;
+Amplitude amp;
+
+FFT fft;
+
+float lucency = 0;
+float ampvalue = 0;
+String path = "";
+boolean isVisualizing = false;
+int bands = 64;
+float[] spectrum = new float[bands];
+
+float circle = 20, circle2 = 20;
+float rot;
+float freq = 0.000005; 
+int cont = 10;
+float r, r2;
+
+void setup() {
+  size(1920, 1080);
+  pixelDensity(displayDensity());
+  colorMode(HSB);
+  ellipseMode(RADIUS);
+
+  selectInput("Select an audio file:", "fileSelected");
+}
+
+void fileSelected(File selection) {
+  if (selection != null) {
+    path = selection.getAbsolutePath();
+    sf = new SoundFile(this, path);
+    sf.amp(0.2);
+    sf.play();
+    amp = new Amplitude(this);
+    amp.input(sf); 
+    fft = new FFT(this, bands);
+    fft.input(sf);
+    isVisualizing = true;
+  }
+}
+
+void draw() {
+  background(300);
+  noStroke();
+
+  if (isVisualizing) {
+    visualizeAudio();
+  }
+}
+
+void visualizeAudio() {
+  ampvalue = amp.analyze();
+  fft.analyze(spectrum);
+
+  translate(width/2, height/2);
+
+  inside();
+  outside();
+  draw3();
+}
+
+void outside() {
+  rotate(radians(rot));
+
+  for (int i = 0; i < 500; i++) {
+    circle = 200 + 50 * sin(millis() * freq * i) + 500 * ampvalue;
+
+    if (ampvalue < 0.01) {
+    } else {
+      fill(frameCount % 255, 150, 150);
+      stroke(frameCount % 255, 150, 150);
+      strokeWeight(0.2);
+      ellipse(circle * cos(i), circle * sin(i), 3, 3);  
+      line(circle * cos(i), circle * sin(i), circle * cos(i - 1), circle * sin(i - 1));
+    }
+  }
+}
+
+void inside() {
+  for (int i = 0; i < bands; i++) {
+    stroke(frameCount % 255, 150, 150);
+    strokeWeight(2);
+    line(0, 0, log(spectrum[i]) * 10 * sin(TWO_PI / bands * i), 10 * log(spectrum[i]) * cos(TWO_PI / bands * i));
+  }
+
+  noFill();
+  stroke(frameCount % 255, 150, 150);
+  strokeWeight(2);
+  beginShape();
+  for (int i = 0; i < bands; i++) {
+    curveVertex(log(spectrum[i]) * 10 * sin(TWO_PI / bands * i), 10 * log(spectrum[i]) * cos(TWO_PI / bands * i));
+  }
+  curveVertex(log(spectrum[0]) * 10 * sin(TWO_PI / bands * 0), 10 * log(spectrum[0]) * cos(TWO_PI / bands * 0));
+  curveVertex(log(spectrum[1]) * 10 * sin(TWO_PI / bands * 1), 10 * log(spectrum[1]) * cos(TWO_PI / bands * 1));
+  curveVertex(log(spectrum[2]) * 10 * sin(TWO_PI / bands * 2), 10 * log(spectrum[2]) * cos(TWO_PI / bands * 2));
+  endShape();
+}
+
+void draw3() {
+  getTime();
+  // drawTimeAsText();
+  translate(0, 0);
+  scale(1.6);
+
+  drawSeconds();
+  drawMinutes();
+  drawHours();
+}
+
+int seconds;
+int minutes;
+int hours;
+
+void getTime() {
+  seconds = second();
+  minutes = minute();
+  hours = hour();
+}
+
+void drawSeconds() {
+  for (int i = 0; i < seconds; i++) {
+    circle2 = 180 + 50 * sin(millis() * i * 0.00005) + 500 * ampvalue;
+    r2 = map(circle2, 150, 250, 3, 2);
+    noStroke();
+    fill(frameCount % 255, 150, 150, seconds);
+    ellipse(circle * cos(i), circle * sin(i), r, r);
+    stroke(frameCount % 255, 150, 150, seconds * 2);
+    strokeWeight(3);
+    line(circle * cos(i), circle * sin(i), circle * cos(i - 1), circle * sin(i - 1));
+  }
+}
+
+void drawMinutes() {
+  for (int i = 0; i < minutes; i++) {
+    circle2 = 150 + 40 * sin(millis() * i * 0.00003) + 500 * ampvalue;
+    r2 = map(circle2, 150, 250, 4, 3);
+    noStroke();
+    fill(frameCount % 255, 150, 150, minutes);
+    ellipse(circle * cos(i), circle * sin(i), r, r);
+    stroke(frameCount % 255, 150, 150, minutes * 2);
+    strokeWeight(1);
+    line(circle * cos(i), circle * sin(i), circle * cos(i - 1), circle * sin(i - 1));
+  }
+}
+
+void drawHours() {
+  for (int i = 0; i < hours; i++) {
+    circle2 = 100 + 30 * sin(millis() * i * 0.00002) + 500 * ampvalue;
+    r2 = map(circle2, 150, 250, 5, 4);
+    noStroke();
+    fill(frameCount % 255, 150, 150, hours);
+    ellipse(circle * cos(i), circle * sin(i), r, r);
+    stroke(frameCount % 255, 150, 150, hours * 2);
+    strokeWeight(20);
+    line(circle * cos(i), circle * sin(i), circle * cos(i - 1), circle * sin(i - 1));
+  }
+}
