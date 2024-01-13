@@ -1,0 +1,39 @@
+float rotateX = 0;
+float rotateY = 0;
+float rotateZ = 0;
+
+void setup() {
+  size(800, 600, P3D);
+}
+
+void draw() {
+  background(255);
+  translate(width / 2, height / 2);
+  rotateX(rotateX);
+  rotateY(rotateY);
+  rotateZ(rotateZ);
+  drawVase();
+  
+  rotateX += 0.01; // 控制旋转速度的变量
+  rotateY += 0.01;
+  rotateZ += 0.01;
+}
+
+void drawVase() {
+  int segments = 12; 
+  float vaseHeight = 200; 
+  float topRadius = 50; 
+  float bottomRadius = 100; 
+  
+  beginShape(TRIANGLE_STRIP);
+  for (int i = 0; i <= segments; i++) {
+    float angle = TWO_PI / segments * i;
+    float xTop = topRadius * cos(angle);
+    float yTop = topRadius * sin(angle);
+    float xBottom = bottomRadius * cos(angle);
+    float yBottom = bottomRadius * sin(angle);
+    vertex(xTop, -vaseHeight / 2, yTop);
+    vertex(xBottom, vaseHeight / 2, yBottom);
+  }
+  endShape(CLOSE);
+}
