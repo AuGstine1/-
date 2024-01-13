@@ -1,0 +1,130 @@
+PVector[] particle,force;
+int num=10;
+float noiseChange;
+float t=0;
+int state=1;
+
+void setup(){
+  size(1920,1080);
+
+  background(200);
+  
+  particle=new PVector[num];
+  force=new PVector[num];
+  
+  for(int i=0;i<num;i++){
+    PVector item=new PVector(random(width),random(height));
+    particle[i]=(PVector) item;
+    PVector item2=new PVector(random(width),random(height));
+    force[i]=(PVector) item2;
+  }
+  frameRate=0.01;
+
+}
+
+void paintNoise(){
+  float noise_x=map(mouseX,0,width,0.001,0.005);
+  float noise_y=map(mouseY,0,height,0.001,0.005);
+
+  for(int j=0;j<num;j++){
+    float angle=TWO_PI*noise(particle[j].x*noise_x,particle[j].y*noise_y,frameCount*0.01);
+    float speed=5*noise(particle[j].x*noise_x,particle[j].y*noise_y,frameCount*0.01);
+    force[j].x=cos(angle)*speed;
+    force[j].y=sin(angle)*speed;
+    particle[j]=PVector.add(force[j],particle[j]);
+    
+    if(mousePressed && mouseButton==LEFT){
+      PVector mouseForce = new PVector(mouseX,mouseY);
+      PVector diff=PVector.sub(mouseForce,particle[j]);
+      diff.normalize();
+      diff.mult(5);
+      particle[j].add(diff);
+    }
+    
+    if(mousePressed && mouseButton==RIGHT){
+      PVector mouseForce2 = new PVector(mouseX,mouseY);
+      PVector diff=PVector.sub(particle[j],mouseForce2);
+      diff.normalize();
+      diff.mult(5);
+      particle[j].add(diff);
+    }
+    
+    if(particle[j].x<0 || particle[j].x>width || particle[j].y<0 || particle[j].y>height){
+      particle[j].set(random(width),random(height));}
+      
+    colorMode(HSB);
+    color c=color(t%255,150,150);
+    
+    switch(state){
+      case 0:{
+        strokeWeight(2);
+        stroke(c,20);
+        fill(c,20);
+        circle(particle[j].x,particle[j].y,1);
+        break;
+      }
+    
+      case 1:{
+        stroke(c,10);
+        drawTree(particle[j].x,particle[j].y,force[j].mult(50),4);
+        //line(particle[j].x-20*force[j].x,particle[j].y-20*force[j].y,particle[j].x+20*force[j].x,particle[j].y+20*force[j].y);
+        break;
+      }
+      
+      case 2:{
+        strokeWeight(2);
+        stroke(c,20);
+        pushMatrix();
+        translate(particle[j].x,particle[j].y);
+        rotate(PI/20*t);
+        noFill();
+        rect(0,0,20,20);
+        popMatrix();
+        break;
+      }
+    }
+  }
+}
+
+void keycontroller(){
+  if(key=='0')state=0;
+  else if(key=='1')state=1;
+  else if(key=='2')state=2;
+}
+
+void drawTree(float x, float y, PVector branch,float weight){
+  if(branch.mag()>100){
+    PVector ps = new PVector(x,y);
+    PVector pe = ps.copy();
+    pe.add(branch);
+    strokeWeight(weight);
+    line(ps.x,ps.y,pe.x,pe.y);
+    
+    weight*=0.5;
+    PVector br1 = branch.copy();
+    br1.mult(0.75);
+    br1 = ROT(br1,PI/4);
+    drawTree(pe.x,pe.y,br1,weight);
+    
+    PVector br2 = branch.copy();
+    br2.mult(0.75);
+    br2 = ROT(br2,-PI/4);
+    drawTree(pe.x,pe.y,br2,weight);
+  }
+}
+
+PVector ROT(PVector p,float ang){
+  PVector pr = new PVector(p.x*cos(ang)-p.y*sin(ang),p.x*sin(ang)+p.y*cos(ang));
+  return pr;
+}
+
+void draw(){
+  t++;
+  keycontroller();
+  paintNoise();
+  if(key==' '){
+    background(10);
+    keycontroller();
+    paintNoise();
+  }
+}
